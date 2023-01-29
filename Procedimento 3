@@ -1,0 +1,288 @@
+module top(
+  input sysclk, // 125MHz
+  output [3:0] led,
+  output led5_r, led5_g, led5_b, led6_r, led6_g, led6_b,
+  output [3:0] VGA_R, VGA_G, VGA_B, 
+  output VGA_HS_O, VGA_VS_O);
+
+  wire pixel_clk, reset, we; 
+  wire [7:0] data, vdata;
+  wire [8:0] address, vaddr;
+  
+  power_on_reset por(sysclk, reset);
+  clk_wiz_1 clockdiv(pixel_clk, sysclk); // 25MHz
+  roll ro(pixel_clk, reset, we, data, address);
+  mem ram(sysclk, we, address, data, vaddr, vdata); 
+  vga video(pixel_clk, reset, vdata, vaddr, VGA_R, VGA_G, VGA_B, VGA_HS_O, VGA_VS_O);
+endmodule
+
+module mem(input clock, we,
+        input [8:0] address,
+        inout [7:0] data,
+        input [8:0] vaddr,
+       output [7:0] vdata);
+
+  reg [7:0] sen[89:0];
+
+  initial
+  begin
+    RAM[0] = 8'b00000000; // sen 0
+    RAM[1] = 8'b11101101; // sen 4
+    RAM[2] = 8'b11010000; // sen 8
+    RAM[3] = 8'b10011100; // sen 12
+    RAM[4] = 8'b01000111; // sen 16
+    RAM[5] = 8'b11000111; // sen 20
+    RAM[6] = 8'b00001111; // sen 24
+    RAM[7] = 8'b00010111; // sen 28
+    RAM[8] = 8'b11010100; // sen 32
+    RAM[9] = 8'b00111100; // sen 36
+    RAM[10] = 8'b01000110; // sen 40
+    RAM[11] = 8'b11101010; // sen 44
+    RAM[12] = 8'b00011110; // sen 48
+    RAM[13] = 8'b11011101; // sen 52
+    RAM[14] = 8'b00011101; // sen 56
+    RAM[15] = 8'b11011001; // sen 60
+    RAM[16] = 8'b00001011; // sen 64
+    RAM[17] = 8'b10101101; // sen 68
+    RAM[18] = 8'b10111011; // sen 72
+    RAM[19] = 8'b00110010; // sen 76
+    RAM[20] = 8'b10111011; // sen 80
+    RAM[21] = 8'b10101101; // sen 84
+    RAM[22] = 8'b00001011; // sen 88
+    RAM[23] = 8'b11011001; // sen 92
+    RAM[24] = 8'b00011101; // sen 96
+    RAM[25] = 8'b11011101; // sen 100
+    RAM[26] = 8'b00011110; // sen 104
+    RAM[27] = 8'b11101010; // sen 108
+    RAM[28] = 8'b01000110; // sen 112
+    RAM[29] = 8'b00111100; // sen 116
+    RAM[30] = 8'b11010100; // sen 120
+    RAM[31] = 8'b00010111; // sen 124
+    RAM[32] = 8'b01000111; // sen 128
+    RAM[33] = 8'b10011100; // sen 132
+    RAM[34] = 8'b11010000; // sen 136
+    RAM[35] = 8'b11101101; // sen 140
+    RAM[36] = 8'b00000000; // sen 144
+    RAM[37] = 8'b00010010; // sen 148
+    RAM[38] = 8'b00101111; // sen 152
+    RAM[39] = 8'b01100011; // sen 156
+    RAM[40] = 8'b10111000; // sen 160
+    RAM[41] = 8'b00111000; // sen 164
+    RAM[42] = 8'b11110000; // sen 168
+    RAM[43] = 8'b11101000; // sen 172
+    RAM[44] = 8'b00101011; // sen 176
+    RAM[45] = 8'b11000011; // sen 180
+    RAM[46] = 8'b10111001; // sen 184
+    RAM[47] = 8'b00010101; // sen 188
+    RAM[48] = 8'b11100001; // sen 192
+    RAM[49] = 8'b00100010; // sen 196
+    RAM[50] = 8'b11100010; // sen 200
+    RAM[51] = 8'b00100110; // sen 204
+    RAM[52] = 8'b11110100; // sen 208
+    RAM[53] = 8'b01010010; // sen 212
+    RAM[54] = 8'b01000100; // sen 216
+    RAM[55] = 8'b11001101; // sen 220
+    RAM[56] = 8'b11110010; // sen 224
+    RAM[57] = 8'b10110100; // sen 228
+    RAM[58] = 8'b00010100; // sen 232
+    RAM[59] = 8'b00010100; // sen 236
+    RAM[60] = 8'b10110100; // sen 240
+    RAM[61] = 8'b11110010; // sen 244
+    RAM[62] = 8'b11001101; // sen 248
+    RAM[63] = 8'b01000100; // sen 252
+    RAM[64] = 8'b01010010; // sen 256
+    RAM[65] = 8'b11110100; // sen 260
+    RAM[66] = 8'b11110100; // sen 264
+    RAM[67] = 8'b00100110; // sen 268
+    RAM[68] = 8'b11100010; // sen 272
+    RAM[69] = 8'b00100010; // sen 276
+    RAM[70] = 8'b11100001; // sen 280
+    RAM[71] = 8'b00010101; // sen 284
+    RAM[72] = 8'b10111001; // sen 288
+    RAM[73] = 8'b11000011; // sen 292
+    RAM[74] = 8'b00101011; // sen 296
+    RAM[75] = 8'b11101000; // sen 300
+    RAM[76] = 8'b11110000; // sen 304
+    RAM[77] = 8'b00111000; // sen 308
+    RAM[78] = 8'b10111000; // sen 312
+    RAM[79] = 8'b01100011; // sen 316
+    RAM[80] = 8'b00101111; // sen 320
+    RAM[81] = 8'b00010010; // sen 324
+    RAM[82] = 8'b00100010; // sen 328
+    RAM[83] = 8'b00010101; // sen 332
+    RAM[84] = 8'b11100001; // sen 336
+    RAM[85] = 8'b11101000; // sen 340
+    RAM[86] = 8'b01100011; // sen 344
+    RAM[87] = 8'b00010010; // sen 348
+    RAM[88] = 8'b00010101; // sen 352
+    RAM[89] = 8'b00000000; // sen 356
+     
+  end
+
+  assign data  = we ? 'bz : RAM[address]; 
+  assign vdata = RAM[vaddr]; 
+
+  always @(posedge clock)
+    if (we) RAM[address] <= data;
+endmodule
+
+module vga(
+  input clk, reset,
+  input  [7:0] vdata,
+  output [8:0] vaddr,
+  output [3:0] VGA_R, VGA_G, VGA_B, 
+  output VGA_HS_O, VGA_VS_O);
+
+  reg [9:0] CounterX, CounterY;
+  reg inDisplayArea;
+  reg vga_HS, vga_VS;
+
+  wire CounterXmaxed = (CounterX == 800); // 16 + 48 + 96 + 640
+  wire CounterYmaxed = (CounterY == 525); // 10 +  2 + 33 + 480
+  wire [3:0] row, col;
+
+  always @(posedge clk or posedge reset)
+    if (reset)
+      CounterX <= 0;
+    else 
+      if (CounterXmaxed)
+        CounterX <= 0;
+      else
+        CounterX <= CounterX + 1;
+
+  always @(posedge clk or posedge reset)
+    if (reset)
+      CounterY <= 0;
+    else 
+      if (CounterXmaxed)
+        if(CounterYmaxed)
+          CounterY <= 0;
+        else
+          CounterY <= CounterY + 1;
+
+  assign row = (CounterY>>5); // 32 pixels x
+  assign col = (CounterX>>5); // 32 pixels 
+  assign vaddr = 212 + col + (row<<4) + (row<<2); // addr = offset + col + row x 20
+
+  always @(posedge clk)
+  begin
+    vga_HS <= (CounterX > (640 + 16) && (CounterX < (640 + 16 + 96)));   // active for 96 clocks
+    vga_VS <= (CounterY > (480 + 10) && (CounterY < (480 + 10 +  2)));   // active for  2 clocks
+    inDisplayArea <= (CounterX < 640) && (CounterY < 480);
+  end
+
+  assign VGA_HS_O = ~vga_HS;
+  assign VGA_VS_O = ~vga_VS;  
+
+  assign VGA_R = inDisplayArea ? {vdata[5:4], 2'b00} : 4'b0000;
+  assign VGA_G = inDisplayArea ? {vdata[3:2], 2'b00} : 4'b0000;
+  assign VGA_B = inDisplayArea ? {vdata[1:0], 2'b00} : 4'b0000;
+endmodule
+ 
+module power_on_reset(
+  input clk, 
+  output reset);
+
+  reg q0 = 1'b0;
+  reg q1 = 1'b0;
+  reg q2 = 1'b0;
+ 
+  always@(posedge clk)
+  begin
+       q0 <= 1'b1;
+       q1 <= q0;
+       q2 <= q1;
+  end
+
+  assign reset = !(q0 & q1 & q2);
+endmodule
+
+module cordic(
+    angle,
+    
+    clock,    // Master clock
+    reset,    // Master asynchronous reset (active-high)
+    start,    // An input signal that the user of this module should set to high when computation should begin
+    angle_in, // Input angle
+    cos_out,  // Output value for cosine of angle
+    sin_out   // Output value for sine of angle
+);
+  
+  input clock;
+  input reset;
+  input start;
+  input [31:0] angle_in;
+  output [31:0] cos_out;
+  output [31:0] sin_out;
+
+  wire [31:0] cos_out = cos;
+  wire [31:0] sin_out = sin;
+  
+  reg [31:0] cos;
+  reg [31:0] sin;
+  reg [31:0] angle;
+  reg [4:0] count;
+  reg state;
+
+  reg [31:0] cos_next;
+  reg [31:0] sin_next;
+  reg [31:0] angle_next;
+  reg [4:0] count_next;
+  reg state_next;
+
+  always @(posedge clock or posedge reset) begin
+      if (reset) begin
+          cos <= 0;
+          sin <= 0;
+          angle <= 0;
+          count <= 0;
+          state <= 0;
+      end else begin
+          cos <= cos_next;
+          sin <= sin_next;
+          angle <= angle_next;
+          count <= count_next;
+          state <= state_next;
+      end
+  end
+  
+  always @* begin
+      // Set all logic regs to a value to prevent any of them holding the value
+      // from last tick and hence being misinterpreted as hardware registers.
+      cos_next = cos;
+      sin_next = sin;
+      angle_next = angle;
+      count_next = count;
+      state_next = state;
+
+      if (state) begin
+          // Compute mode.
+          cos_next = cos + (direction_negative ? sin_shr : -sin_shr);
+          sin_next = sin + (direction_negative ? -cos_shr : cos_shr);
+          angle_next = angle + (direction_negative ? beta : -beta);
+          count_next = count + 1;
+
+          if (count == 31) begin
+              // If this is the last iteration, go back to the idle state.
+              state_next = 0;
+          end
+      end
+
+      else begin
+          // Idle mode.
+          if (start) begin
+              cos_next = `K;         // Set up initial value for cos.
+              sin_next = 0;          // Set up initial value for sin.
+              angle_next = angle_in; // Latch input angle into the angle register.
+              count_next = 0;        // Set up counter.
+              state_next = 1;        // Go to compute mode.
+          end
+      end
+  end
+  
+  wire [31:0] cos_signbits = {32{cos[31]}};
+  wire [31:0] sin_signbits = {32{sin[31]}};
+  wire [31:0] cos_shr = {cos_signbits, cos} >> count;
+  wire [31:0] sin_shr = {sin_signbits, sin} >> count;
+  wire direction_negative = angle[31];
+endmodule
